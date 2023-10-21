@@ -1,2 +1,0 @@
-/usr/bin/ccmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/opt/clion/bin/ninja/linux/x64/ninja -DCMAKE_C_COMPILER=/usr/bin/gcc -G Ninja -S /home/io/Projects/AutocompleteEngine -B /home/io/Projects/AutocompleteEngine/cmake-build-debug
-Error opening terminal: unknown.

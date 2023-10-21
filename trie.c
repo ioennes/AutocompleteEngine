@@ -7,7 +7,7 @@
 #include "trie.h"
 #include "fruits.h"
 
-Trie* createTrie() {
+Trie *createTrie() {
     Trie *trie = (Trie*) malloc(sizeof(Trie));
     trie->root = (Node*) malloc(sizeof(Node));
     trie->root->eow = false;
@@ -99,7 +99,6 @@ void readInput(Trie *trie) {
 
         prefix[length - 1] = ch;
         prefix[length] = '\0';
-
     }
     suggest(trie, prefix);
 }
