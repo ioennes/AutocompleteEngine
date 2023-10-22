@@ -18,7 +18,7 @@ Node *createNode();
 void insert(Trie *, const char *);
 bool search(Trie *, const char *);
 void suggest(Trie *, const char *);
-void recurse(Node *, char *, int);
+void recurse(Node *, char *, int, int *);
 void readInput(Trie *);
 
 #endif

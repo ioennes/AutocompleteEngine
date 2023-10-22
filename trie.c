@@ -3,16 +3,18 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <termios.h>
 
 #include "trie.h"
-#include "fruits.h"
+#include "words.h"
 
 Trie *createTrie() {
     Trie *trie = (Trie*) malloc(sizeof(Trie));
     trie->root = (Node*) malloc(sizeof(Node));
     trie->root->eow = false;
-    for (int i = 0; i < fruits_count; i++) {
-        insert(trie, fruits[i]);
+    for (int i = 0; i < words_count; i++) {
+        insert(trie, words[i]);
     }
     return trie;
 }
@@ -67,44 +69,71 @@ void suggest(Trie *trie, const char *prefix) {
         }
         prefix++;
     }
-    recurse(current, suggestion, length);
+    int sc = 0;
+    recurse(current, suggestion, length, &sc);
 }
 
-void recurse(Node *node, char *suggestion, int length) {
+void recurse(Node *node, char *suggestion, int length, int* sc) {
+    if (*sc >= 3) return;
     if (node->eow) {
         suggestion[length] = '\0';
         printf("- %s\n", suggestion);
+        (*sc)++;
     }
 
     for (int i = 0; i < 26; i++) {
         if (node->children[i] != NULL) {
             suggestion[length] = 'a' + i;
-            recurse(node->children[i], suggestion, length + 1);
+            recurse(node->children[i], suggestion, length + 1, sc);
         }
     }
 }
 
 void readInput(Trie *trie) {
+    struct termios oldt, newt;
     char ch;
     char *prefix = NULL;
     int length = 0;
-    while ((ch = getchar()) != EOF && ch != '\n') {
-        length++;
-        prefix = (char *) realloc(prefix, length + 1);
 
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    int suggestion_count = 3;
+
+    while (1) {
+        ch = getchar();
+        if (ch == '\n') break;
+        if (ch == 127) {
+            if (length > 0) {
+                length--;
+                prefix[length] = '\0';
+                printf("\033[H\033[J");
+                printf("%s\n", prefix);
+                if (length > 0) {
+                    suggest(trie, prefix);
+                }
+            }
+            continue;
+        }
+        prefix = realloc(prefix, length + 2);
+        prefix[length++] = ch;
+        prefix[length] = '\0';
         if (prefix == NULL) {
             fprintf(stderr, "ERROR::MEM_ALLOC_ERROR");
-            return;
+            break;
         }
 
-        prefix[length - 1] = ch;
-        prefix[length] = '\0';
+        printf("\033[H\033[J");
+        printf("%s\n", prefix);
+        suggest(trie, prefix);
     }
-    suggest(trie, prefix);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    free(prefix);
 }
 
 int main() {
     Trie *trie = createTrie();
-    while (1)
-        readInput(trie);
+    readInput(trie);
 }
